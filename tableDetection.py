@@ -1,9 +1,9 @@
 """Importing necessary modules"""
 
-import json
 import re
 
 
+# V1
 def fetch_text_timetable(text):
     data, slots = [], []
     slots += re.findall(
@@ -24,4 +24,34 @@ def fetch_text_timetable(text):
             "Venue": venue,
         }
         data.append(slot_data)
+    return {"Slots": data}
+
+
+# V2
+def fetch_text_timetable_v2(text):
+    text = text.replace("\r", "")
+    code_and_name = [
+        i[:-1].split(" - ")
+        for i in re.findall("[A-Z]{4}[0-9]{3}.+\n|[A-Z]{3}[0-9]{4}.+\n", text)
+    ]
+    venue = [i[3:-1] for i in re.findall("\n{3}[A-Z]+[0-9]{1,3}.+\n|\n{3}NIL\n", text)]
+    slots = [i[:-3].split("+") for i in re.findall(".+\d.+[-]\n|NIL.+[-]\n", text)]
+    data = []
+
+    try:
+        for i in range(len(slots)):
+            if slots[i][0] != "NIL":
+                for slot in slots[i]:
+                    slot_data = {
+                        "Parsed_Data": "NIL",
+                        "Slot": slot,
+                        "Course_Name": code_and_name[i][0],
+                        "Course_Full_Name": code_and_name[i][1],
+                        "Venue": venue[i],
+                        "Course_type": "Lab" if slot[0] == "L" else "Theory",
+                    }
+                    data.append(slot_data)
+
+    except IndentationError:
+        data = []
     return {"Slots": data}
